@@ -1,55 +1,5 @@
-<template>
-  <h1>Cart pages</h1>
-  <div v-for="item in myCart">
-    <div>
-      ID: {{ item.id }}
-    </div>
-    <div>
-      Name: {{ item.name }}
-    </div>
-    <button @click="handleClickDelete(item.id)">ลบ</button>
-    <hr />
-  </div>
-</template>
-
-<script setup>
-import dataMock from "~/data/mock-products.json"
-
-const myCart = ref([])
-
-const getProducts = () => {
-  const ls = localStorage.getItem("products")
-  return ls
-}
-
-const handleClickDelete = (productId) => {
-  console.log('id', productId)
-  const ls = getProducts()
-  const lsArray = JSON.parse(ls)
-  const result = lsArray.filter((item) => {
-    return item !== productId
-  })
-  const resultStr = JSON.stringify(result)
-  localStorage.setItem("products", resultStr)
-
-  // Update Render data
-  updateMyCart()
-}
-
-const updateMyCart = () => {
-  const productsLS = getProducts()
-  const productsArray = JSON.parse(productsLS)
-
-  const result = dataMock.products.filter((item) => {
-    // logic
-    return productsArray.includes(item.id)
-  })
-
-  myCart.value = result
-}
-
-onMounted(() => {
-  // initial data
-  updateMyCart()
-})
+﻿<script setup lang="ts">
+import data from '~/data/mock-products.json';const {items,initialize,updateQuantity,removeItem}=useCart();onMounted(initialize);const products=computed(()=>items.value.map(i=>{const p=data.products.find(p=>p.id===i.id);return p?{...p,quantity:i.quantity}:null}).filter(Boolean) as Array<typeof data.products[number]&{quantity:number}>);const total=computed(()=>products.value.reduce((s,p)=>s+p.price*p.quantity,0));const price=(n:number)=>new Intl.NumberFormat('th-TH').format(n);useHead({title:'ตะกร้าสินค้า — Byte Store'})
 </script>
+<template><section class="page"><div class="section-head"><div><p class="eyebrow">YOUR CART</p><h1>ตะกร้าสินค้า</h1><p>{{items.length}} รายการในตะกร้าของคุณ</p></div></div><div v-if="products.length" class="layout"><div class="list"><article v-for="p in products" :key="p.id" class="item"><div class="thumb">{{p.brand.slice(0,2).toUpperCase()}}</div><div class="info"><small>{{p.brand}}</small><h2>{{p.name}}</h2><button class="remove" @click="removeItem(p.id)">นำออก</button></div><div class="qty"><button @click="updateQuantity(p.id,p.quantity-1)">−</button><span>{{p.quantity}}</span><button :disabled="p.quantity>=p.stock" @click="updateQuantity(p.id,p.quantity+1)">+</button></div><strong class="line-price">฿{{price(p.price*p.quantity)}}</strong></article></div><aside><p class="eyebrow">ORDER SUMMARY</p><h2>สรุปคำสั่งซื้อ</h2><div><span>ยอดรวมสินค้า</span><strong>฿{{price(total)}}</strong></div><div><span>ค่าจัดส่ง</span><strong class="free">ฟรี</strong></div><hr><div class="grand"><span>ยอดสุทธิ</span><strong>฿{{price(total)}}</strong></div><button class="primary-button">ดำเนินการสั่งซื้อ</button><small>ราคานี้รวมภาษีมูลค่าเพิ่มแล้ว</small></aside></div><div v-else class="empty-state"><div class="empty-icon">0</div><h2>ตะกร้ายังว่างอยู่</h2><p>เลือกสินค้าที่ถูกใจ แล้วกลับมาดูรายการได้ที่นี่</p><NuxtLink to="/product" class="primary-button">เลือกดูสินค้า</NuxtLink></div></section></template>
+<style scoped>.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,.75fr);gap:28px;align-items:start}.list{display:grid;gap:12px}.item{padding:18px;display:grid;grid-template-columns:92px 1fr auto 120px;gap:18px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:16px}.thumb{width:92px;height:82px;display:grid;place-items:center;background:#dbe9df;border-radius:11px;font:700 1.4rem 'Space Grotesk'}.info small{color:var(--green);font-weight:700}.info h2{margin:3px 0 8px;font:600 1.05rem 'Space Grotesk'}.remove{padding:0;color:#a24636;background:none;border:0;text-decoration:underline;cursor:pointer}.qty{height:40px;display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden}.qty button{width:34px;height:100%;border:0;background:white;cursor:pointer}.qty button:disabled{color:#bbb}.qty span{min-width:30px;text-align:center;font-weight:700}.line-price{text-align:right;font:700 1.05rem 'Space Grotesk'}aside{padding:26px;position:sticky;top:98px;background:var(--ink);color:white;border-radius:18px}aside h2{margin:0 0 26px;font:700 1.5rem 'Space Grotesk'}aside>div{margin:14px 0;display:flex;justify-content:space-between;color:#cbd4cd}.free{color:var(--lime)}aside hr{margin:22px 0;border:0;border-top:1px solid #46534b}.grand{color:white!important;font-size:1.15rem}.grand strong{font:700 1.45rem 'Space Grotesk'}aside .primary-button{width:100%;margin-top:18px;color:var(--ink);background:var(--lime)}aside>small{margin-top:12px;display:block;color:#8e9c92;text-align:center}.empty-icon{width:70px;height:70px;margin:0 auto 18px;display:grid;place-items:center;color:white;background:var(--green);border-radius:50%;font:700 1.4rem 'Space Grotesk'}@media(max-width:880px){.layout{grid-template-columns:1fr}aside{position:static}}@media(max-width:620px){.item{grid-template-columns:68px 1fr}.thumb{width:68px;height:68px}.qty{grid-column:2;width:100px}.line-price{grid-column:2;grid-row:3;justify-self:end;margin-top:-40px}}</style>
